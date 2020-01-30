@@ -462,6 +462,10 @@ export const parse = async (
 
   // Parses an operator name
   function parse_op() {
+    // Prevents parsing "=>" as an operator
+    if (next_is("=> ") || next_is("=>\n")) {
+      return null;
+    }
     for (var str of op_chars) {
       // Prevents parsing case "|" as operator
       if (str === "|" ? next_is("||") : next_is(str)) {
@@ -691,6 +695,50 @@ export const parse = async (
       parse_exact("else");
       var val1 = parse_term(nams);
       return Ite(cond, val0, val1, loc(idx - init));
+    }
+  }
+
+  // Parses a when statement, desugars to if-then-else
+  function parse_whn(nams) {
+    var init = idx;
+    if (match("when")) {
+      var branches = [];
+      while (match("|")) {
+        var valu = parse_term(nams);
+        match("=>");
+        var resu = parse_term(nams);
+        branches.push([valu,resu]);
+      };
+      parse_exact("else");
+      var term : Term = parse_term(nams);
+      for (var i = branches.length - 1; i >= 0; --i) {
+        var [chek,rets] = branches[i];
+        term = Ite(chek, rets, term, loc(idx - init));
+      }
+      return term;
+    }
+  }
+
+  // Parses a switch statement, desugars to if-then-else
+  function parse_swt(nams) {
+    var init = idx;
+    if (match("switch")) {
+      var cond = parse_term(nams);
+      var branches = [];
+      while (match("|")) {
+        var valu = parse_term(nams);
+        match("=>");
+        var resu = parse_term(nams);
+        branches.push([valu,resu]);
+      };
+      parse_exact("else");
+      var term : Term = parse_term(nams);
+      for (var i = branches.length - 1; i >= 0; --i) {
+        var [test,rets] = branches[i];
+        var chek = Op2("===", test, cond, loc(idx - init));
+        term = Ite(chek, rets, term, loc(idx - init));
+      }
+      return term;
     }
   }
 
@@ -1199,6 +1247,8 @@ export const parse = async (
     else if (parsed = parse_lst(nams)) {}
     else if (parsed = parse_blk(nams)) {}
     else if (parsed = parse_for(nams)) {}
+    else if (parsed = parse_whn(nams)) {}
+    else if (parsed = parse_swt(nams)) {}
     else if (parsed = parse_ref(nams)) {}
 
     // Parses spaced operators
@@ -1232,6 +1282,18 @@ export const parse = async (
       qual_imports[impf] = impf;
       open_imports[impf] = true;
       await do_import(impf);
+      return true;
+    }
+  }
+
+  // Parses a top-level enum
+  async function do_parse_enum() {
+    if (match("enum ") || match("enum\n")) {
+      var value = 0;
+      while (match("|")) {
+        var name = parse_name();
+        define(file+"/"+name, Val(value++));
+      }
       return true;
     }
   }
@@ -1341,21 +1403,6 @@ export const parse = async (
     }
   }
 
-  // Parses a top-level `?defs` util
-  async function do_parse_defs_util() {
-    if (match("?defs")) {
-      var filt = match("/") ? parse_string(x => x !== "/") : "";
-      var regx = new RegExp(filt, "i");
-      console.log("Definitions:");
-      for (var def in defs) {
-        if (def[0] !== "$" && regx.test(def)) {
-          console.log("- " + def);
-        }
-      }
-      return true;
-    }
-  }
-
   // Parses a top-level definition:
   //
   //    name(arg0 : A, arg1 : B, ...) : RetType
@@ -1445,7 +1492,7 @@ export const parse = async (
     next_char();
     if      (await do_parse_import()){}
     else if (await do_parse_datatype()){}
-    else if (await do_parse_defs_util()){}
+    else if (await do_parse_enum()){}
     else if (!(await do_parse_def())) break;
     next_char();
   }
