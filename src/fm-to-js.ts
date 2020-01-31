@@ -98,13 +98,13 @@ const compile = (name: string, defs: core.Defs = {}): string => {
       var file = name.slice(0, -1);
       var js_defs = [];
       for (var def_name in defs) {
-        if (def_name.slice(0, file.length) === file) {
-          go(core.Ref(def_name), 0);
-          js_defs.push([
-            def_name.slice(file.length),
-            js_name(def_name)
-          ]);
-        };
+        go(core.Ref(def_name), 0);
+        if (def_name.indexOf("/") !== -1) {
+          var [term_file,term_name] = def_name.split("/");
+          js_defs.push([term_name, js_name(def_name)]);
+        } else {
+          js_defs.push([def_name, js_name(def_name)]);
+        }
       }
       return "(function(){\n"
         + code
