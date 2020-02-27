@@ -254,7 +254,7 @@ class Net {
             var res = Numeric(Math.acos(snd));
             break;
           case 20:
-            var res = Numeric(Math.atan(snd));
+            var res = Numeric(Math.atan2(fst, snd));
             break;
           default:
             throw "[ERROR]\nInvalid interaction.";

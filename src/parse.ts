@@ -860,9 +860,17 @@ export const parse = async (
     var fns = ["sin","cos","tan","asin","acos","atan","~"];
     for (var fn of fns) {
       if (match(fn+"(")) {
-        var expr = parse_term(nams);
+        var val0, val1;
+        if (fn === "atan") {
+          val0 = parse_term(nams);
+          parse_exact(",");
+          val1 = parse_term(nams);
+        } else {
+          val0 = Val(0);
+          val1 = parse_term(nams);
+        }
         parse_exact(")");
-        return Op2(fn, Val(0), expr, loc(idx - init));
+        return Op2(fn, val0, val1, loc(idx - init));
       }
     }
   }

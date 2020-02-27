@@ -534,7 +534,7 @@ const reduce = (term: Term, defs, opts: any = {}) => {
         case "acos":
           return Val(Math.acos(num1[1].numb));
         case "atan":
-          return Val(Math.atan(num1[1].numb));
+          return Val(Math.atan2(num0[1].numb, num1[1].numb));
         default:
           throw "[NORMALIZATION-ERROR]\nUnknown primitive: " + func + ".";
       }

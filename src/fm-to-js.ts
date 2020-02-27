@@ -71,7 +71,7 @@ const compile = (name: string, defs: core.Defs = {}): string => {
           case "acos":
             return "Math.acos(" + num1 + ")";
           case "atan":
-            return "Math.atan(" + num1 + ")";
+            return "Math.atan2(" + num0 + "," + num1 + ")";
           default:
             throw "TODO: implement operator ";
         }
