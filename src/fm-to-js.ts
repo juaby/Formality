@@ -81,7 +81,7 @@ const compile = (name: string, defs: core.Defs = {}): string => {
         var if_f = go(term[1].if_f, depth);
         return "(" + cond + "?" + if_t + ":" + if_f + ")";
       case "Log":
-        return go(term[1].expr, depth);
+        return "(console.log("+go(term[1].msge, depth)+"),"+go(term[1].expr, depth)+")";
       case "Ref":
         var name = js_name(term[1].name);
         if (!seen[term[1].name]) {

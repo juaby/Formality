@@ -1198,8 +1198,9 @@ export const parse = async (
           for (var i = 0; i < adt_ctor[0][1].length; ++i) {
             var field_name = adt_ctor[0][1][i][0];
             var field_var = Var(adt_ctor[0][1].length-i-1);
+            var field_eras = adt_ctor[0][1][i][2];
             var field = maps[field_name] || field_var;
-            term = App(term, field, false);
+            term = App(term, field, field_eras);
           }
           for (var i = adt_ctor[0][1].length - 1; i >= 0; --i) {
             term = Lam(adt_ctor[0][1][i][0], null, term, false);
